@@ -42,6 +42,7 @@ public class Util {
             properties.put(Environment.USER, NAME);
             properties.put(Environment.PASS, PASS);
             properties.put(Environment.SHOW_SQL, true);
+//            properties.put(Environment.DIALECT, "org.hibernate.dialect.MySQL8Dialect");
             configuration.setProperties(properties);
             configuration.addAnnotatedClass(User.class);
             ServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()

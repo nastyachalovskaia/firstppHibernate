@@ -3,6 +3,7 @@ package jm.task.core.jdbc.dao;
 import jm.task.core.jdbc.model.User;
 import jm.task.core.jdbc.util.Util;
 import org.hibernate.Session;
+import org.hibernate.Transaction;
 import org.hibernate.query.Query;
 
 import java.util.ArrayList;
@@ -23,23 +24,35 @@ public class UserDaoHibernateImpl implements UserDao {
                 + " LASTNAME varchar(100) NOT NULL,"
                 + " AGE tinyint"
                 + ")";
+
+        Transaction transaction = null;
+
         try (Session session = Util.getSessionFactory().openSession()) {
-            session.beginTransaction();
+            transaction = session.beginTransaction();
             session.createSQLQuery(SQL_CREATE).executeUpdate();
-            session.getTransaction().commit();
+            transaction.commit();
         } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
+            }
             System.err.println("Не удалось создать таблицу.");
         }
     }
 
     @Override
     public void dropUsersTable() {
-        String SQL_DROP = "DROP TABLE USERS";
+        String SQL_DROP = "drop table if exists users";
+
+        Transaction transaction = null;
+
         try (Session session = Util.getSessionFactory().openSession()) {
-            session.beginTransaction();
+            transaction = session.beginTransaction();
             session.createSQLQuery(SQL_DROP).executeUpdate();
-            session.getTransaction().commit();
+            transaction.commit();
         } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
+            }
             System.err.println("Не удалось удалить таблицу.");
         }
     }
@@ -47,12 +60,16 @@ public class UserDaoHibernateImpl implements UserDao {
     @Override
     public void saveUser(String name, String lastName, byte age) {
         User user = new User(name, lastName, age);
+        Transaction transaction = null;
+
         try (Session session = Util.getSessionFactory().openSession()) {
-            session.beginTransaction();
+            transaction = session.beginTransaction();
             session.save(user);
-            session.getTransaction().commit();
-        } catch (
-                Exception e) {
+            transaction.commit();
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
+            }
             System.err.println("Не удалось сохранить пользователя.");
         }
 
@@ -60,14 +77,19 @@ public class UserDaoHibernateImpl implements UserDao {
 
     @Override
     public void removeUserById(long id) {
-        String SQL_REMOVE_USERS_BY_ID = "DELETE FROM users WHERE ID =: currentID";
+        String SQL_REMOVE_USERS_BY_ID = "delete User where id =: currentId";
+        Transaction transaction = null;
+
         try (Session session = Util.getSessionFactory().openSession()) {
             session.beginTransaction();
             Query query = session.createQuery(SQL_REMOVE_USERS_BY_ID);
-            query.setParameter("currentID", id);
+            query.setParameter("currentId", id);
             query.executeUpdate();
             session.getTransaction().commit();
         } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
+            }
             System.err.println("Не удалось удалить пользователя по айди.");
         }
     }
@@ -78,11 +100,9 @@ public class UserDaoHibernateImpl implements UserDao {
         List<User> userList = new ArrayList<>();
 
         try (Session session = Util.getSessionFactory().openSession()) {
-            session.beginTransaction();
             userList = session.createSQLQuery(SQL_GET_ALL_USERS)
                     .addEntity(User.class)
                     .list();
-            session.getTransaction().commit();
         } catch (Exception e) {
             System.err.println("Не удалось получить пользователя.");
         }
@@ -92,11 +112,16 @@ public class UserDaoHibernateImpl implements UserDao {
     @Override
     public void cleanUsersTable() {
         String SQL_CLEAN_USERS_TABLE = "TRUNCATE TABLE USERS";
+        Transaction transaction = null;
+
         try (Session session = Util.getSessionFactory().openSession()) {
-            session.beginTransaction();
+            transaction = session.beginTransaction();
             session.createSQLQuery(SQL_CLEAN_USERS_TABLE).executeUpdate();
-            session.getTransaction().commit();
+            transaction.commit();
         } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
+            }
             System.err.println("Не удалось очистить таблицу.");
         }
     }
